@@ -31,8 +31,8 @@ public class IAccountServiceImpl implements IAccountService {
 	@Override
 	public void createAccount(CustomerDto customerDto) {
 		Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
-		customer.setCreatedAt(LocalDateTime.now());
-		customer.setCreatedBy("Admin");
+		//customer.setCreatedAt(LocalDateTime.now());
+		//customer.setCreatedBy("Admin");
 		// validating customer already exist with given mobile number
 
 		Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
@@ -41,7 +41,7 @@ public class IAccountServiceImpl implements IAccountService {
 					"Customer already registered with given mobile number " + customerDto.getMobileNumber());
 		}
 		Customer savedCustomer = customerRepository.save(customer);
-		
+
 		accountRepository.save(createNewAccount(savedCustomer));
 	}
 
@@ -53,8 +53,8 @@ public class IAccountServiceImpl implements IAccountService {
 		newAccount.setAccountNumber(randomAccNumber);
 		newAccount.setAccountType(AccountsConstants.SAVINGS);
 		newAccount.setBranchAddress(AccountsConstants.ADDRESS);
-		newAccount.setCreatedAt(LocalDateTime.now());
-		newAccount.setCreatedBy("Admin");
+		//newAccount.setCreatedAt(LocalDateTime.now());
+		//newAccount.setCreatedBy("Admin");
 		return newAccount;
 	}
 
@@ -85,15 +85,24 @@ public class IAccountServiceImpl implements IAccountService {
 			Customer customer = customerRepository.findById(savedAccounts.getCustomerId())
 					.orElseThrow(() -> new ResourseNotFoundException("Customer", "Customer ID",
 							savedAccounts.getCustomerId().toString()));
-			
-			
+
 			Customer customerMapper = CustomerMapper.mapToCustomer(customerDto, customer);
 			customerRepository.save(customerMapper);
-			isUpdated=true;
+			isUpdated = true;
 
 		}
 
 		return isUpdated;
+	}
+
+	@Override
+	public boolean deleteAccount(String mobileNumber) {
+
+		Customer customer = customerRepository.findByMobileNumber(mobileNumber)
+				.orElseThrow(() -> new ResourseNotFoundException("Customer", "Mobile Number", mobileNumber));
+		accountRepository.deleteByCustomerId(customer.getCustomerId());
+		customerRepository.deleteById(customer.getCustomerId());
+		return true;
 	}
 
 }
